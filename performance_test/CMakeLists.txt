@@ -87,7 +87,8 @@ set(${PROJECT_NAME}_SOURCES
     src/experiment_execution/analyze_runner.cpp)
 
 set(${PROJECT_NAME}_ODB_HEADERS
-    src/experiment_configuration/experiment_configuration.hpp)
+    src/experiment_configuration/experiment_configuration.hpp
+    src/experiment_execution/analysis_result.hpp)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
     "src/msg/Array1k.msg"
@@ -141,7 +142,6 @@ set(sources
     src/experiment_configuration/communication_mean.hpp
     src/data_running/data_runner_base.hpp
     src/data_running/data_runner_factory.hpp
-    src/experiment_execution/analysis_result.hpp
     src/experiment_configuration/qos_abstraction.hpp
     src/utilities/rt_enabler.hpp
     src/utilities/spin_lock.hpp
@@ -158,7 +158,8 @@ if(PERFORMANCE_TEST_FASTRTPS_ENABLED)
 endif()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}/src/experiment_configuration)
+	${CMAKE_CURRENT_SOURCE_DIR}/src/experiment_configuration
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/experiment_execution)
 
 
 set(EXE_NAME perf_test)
