@@ -19,9 +19,9 @@
 #include <memory>
 #include <vector>
 
-#include "analysis_result.hpp"
+#include "experiment_configuration.hpp"
 #include "../data_running/data_runner_factory.hpp"
-#include "../experiment_configuration/experiment_configuration.hpp"
+
 
 #ifdef ODB_FOR_SQL_ENABLED
   #include <odb/database.hxx>

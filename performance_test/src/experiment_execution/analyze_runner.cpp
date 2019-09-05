@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "analyze_runner.hpp"
-#include "analysis_result.hpp"
+#include "experiment_configuration.hpp"
 
 #ifdef ODB_FOR_SQL_ENABLED
   #include <memory>
@@ -37,7 +37,7 @@
   #include <odb/schema-catalog.hxx>
 
   #include "experiment_configuration_odb.hpp"
-  #include "analysis_result_odb.hpp"
+
 #endif
 
 
@@ -131,7 +131,6 @@ void AnalyzeRunner::run() const
     auto now = boost::posix_time::microsec_clock::local_time();
     auto loop_diff_start = now - loop_start;
     auto experiment_diff_start = now - experiment_start;
-
     analyze(loop_diff_start, experiment_diff_start);
   }
 

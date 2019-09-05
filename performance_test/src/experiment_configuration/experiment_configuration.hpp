@@ -14,6 +14,14 @@
 
 #ifndef EXPERIMENT_CONFIGURATION__EXPERIMENT_CONFIGURATION_HPP_
 #define EXPERIMENT_CONFIGURATION__EXPERIMENT_CONFIGURATION_HPP_
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <cstddef>
+#include <chrono>
+#include <sstream>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include "../utilities/statistics_tracker.hpp"
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -28,11 +36,15 @@
 #ifdef ODB_FOR_SQL_ENABLED
   #include <odb/core.hxx>
   #include <tr1/memory>
+  #include <odb/boost/date-time/exceptions.hxx>
 #endif
-
 
 namespace performance_test
 {
+#ifdef ODB_FOR_SQL_ENABLED
+class AnalysisResult;
+class ExperimentConfiguration;
+#endif
 
 /**
  * \brief Represents the configuration of an experiment.
@@ -41,8 +53,6 @@ namespace performance_test
  * configuration by command line arguments are supported.
  */
 #ifdef ODB_FOR_SQL_ENABLED
-class AnalysisResult;
-
   #pragma db value(QOSAbstraction) definition
   #pragma db object
 #endif
@@ -146,6 +156,11 @@ public:
 
 
 private:
+
+#ifdef ODB_FOR_SQL_ENABLED
+  friend class odb::access;
+#endif
+
   ExperimentConfiguration()
   : m_id(boost::uuids::random_generator()()),
     m_is_setup(false),
@@ -162,10 +177,6 @@ private:
     m_is_drivepx_rt(false),
     m_roundtrip_mode(RoundTripMode::NONE)
   {}
-
-#ifdef ODB_FOR_SQL_ENABLED
-  friend class odb::access;
-#endif
 
   /// Throws #std::runtime_error if the experiment is not set up.
   void check_setup() const;
@@ -213,7 +224,7 @@ private:
   RoundTripMode m_roundtrip_mode;
 
 #ifdef ODB_FOR_SQL_ENABLED
-#pragma db value_not_null inverse(configuration)
+  #pragma db value_not_null inverse(configuration)
   std::vector<std::tr1::weak_ptr<AnalysisResult>> results;
 #endif
 
@@ -222,12 +233,89 @@ private:
 /// Outstream operator for RoundTripMode.
 std::ostream & operator<<(std::ostream & stream, const ExperimentConfiguration::RoundTripMode & e);
 
-
 /// Outstream operator for ExperimentConfiguration.
 std::ostream & operator<<(std::ostream & stream, const ExperimentConfiguration & e);
+
+// Outstream operator for timeval to seconds (double).
+std::ostream & operator<<(std::ostream & stream, const timeval & e);
+#ifdef ODB_FOR_SQL_ENABLED
+#pragma db value(StatisticsTracker) definition
+#pragma db value(rusage) definition
+#pragma db value(timeval) definition
+
+/// Represents the results of an experiment iteration.
+#pragma db object
+class AnalysisResult
+#else
+class AnalysisResult
+#endif
+{
+public:
+
+  /**
+   * \brief Constructs an result with the specified parameters.
+   * \param experiment_start Time the experiment started.
+   * \param loop_start  Time the loop iteration started.
+   * \param num_samples_received Number of samples received during the experiment iteration.
+   * \param num_samples_sent Number of samples sent during the experiment iteration.
+   * \param num_samples_lost Number of samples lost during the experiment iteration.
+   * \param total_data_received Total data received during the experiment iteration in bytes.
+   * \param latency Latency statistics of samples received.
+   * \param pub_loop_time_reserve Loop time statistics of the publisher threads.
+   * \param sub_loop_time_reserve Loop time statistics of the subscriber threads.
+   */
+  AnalysisResult(
+      const boost::posix_time::time_duration experiment_start,
+      const boost::posix_time::time_duration loop_start,
+      const uint64_t num_samples_received,
+      const uint64_t num_samples_sent,
+      const uint64_t num_samples_lost,
+      const std::size_t total_data_received,
+      const StatisticsTracker latency,
+      const StatisticsTracker pub_loop_time_reserve,
+      const StatisticsTracker sub_loop_time_reserve
+  );
+
+  /**
+   * \brief Returns a header for a CVS file containing the analysis result data as a string.
+   * \param pretty_print If set, inserts additional tabs to format the output nicer.
+   * \param st The data seperator.
+   * \return A string containing the CVS header.
+   */
+  static std::string csv_header(const bool pretty_print = false, std::string st = ",");
+
+  /**
+   * \brief Returns the data contained the analysis result as a string.
+   * \param pretty_print If set, inserts additional tabs to format the output nicer.
+   * \param st The data seperator.
+   *
+   * \return A string with the contained data as CSV row.
+   */
+  std::string to_csv_string(const bool pretty_print = false, std::string st = ",") const;
+
+private:
+#ifdef ODB_FOR_SQL_ENABLED
+  friend class odb::access;
+#endif
+#pragma db id
+  const boost::posix_time::time_duration m_experiment_start;
+  const boost::posix_time::time_duration m_loop_start;
+  const uint64_t m_num_samples_received;
+  const uint64_t m_num_samples_sent;
+  const uint64_t m_num_samples_lost;
+  const std::size_t m_total_data_received;
+
+  const StatisticsTracker m_latency;
+  const StatisticsTracker m_pub_loop_time_reserve;
+  const StatisticsTracker m_sub_loop_time_reserve;
+
+  rusage m_sys_usage;
+#ifdef ODB_FOR_SQL_ENABLED
+  #pragma db not_null
+  std::tr1::shared_ptr<ExperimentConfiguration> configuration;
+#endif
+};
+
 }  // namespace performance_test
 
-#ifdef ODB_FOR_SQL_ENABLED
-#include "analysis_result.hpp"
-#endif
 #endif  // EXPERIMENT_CONFIGURATION__EXPERIMENT_CONFIGURATION_HPP_

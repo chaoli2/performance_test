@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "analysis_result.hpp"
+#include "experiment_configuration.hpp"
 
 #include <iomanip>
 #include <string>

@@ -103,11 +103,12 @@ if(ODB_FOR_SQL_ENABLED)
 endif()
 
 set(${PROJECT_NAME}_SOURCES
-    src/experiment_execution/analyze_runner.cpp)
+    src/experiment_execution/analyze_runner.cpp
+    )
 
 set(${PROJECT_NAME}_ODB_HEADERS
     src/experiment_configuration/experiment_configuration.hpp
-    src/experiment_execution/analysis_result.hpp)
+    )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
     "src/msg/Array1k.msg"
@@ -146,8 +147,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 if(ODB_FOR_SQL_ENABLED)
   odb_compile(${PROJECT_NAME}_SOURCES FILES ${${PROJECT_NAME}_ODB_HEADERS} DB "${DB_TYPE}"
-      GENERATE_QUERY GENERATE_SESSION GENERATE_SCHEMA INCLUDE
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/experiment_configuration ${CMAKE_CURRENT_SOURCE_DIR}/src/experiment_execution
+      GENERATE_QUERY GENERATE_SESSION GENERATE_SCHEMA
+      INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/src/experiment_configuration
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/experiment_execution
       DEFAULT_POINTER std::tr1::shared_ptr
       STANDARD c++11 PROFILE boost X_CPP_OPTION -DODB_FOR_SQL_ENABLED)
 endif()
