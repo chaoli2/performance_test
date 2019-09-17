@@ -36,6 +36,7 @@ def parse_file(file, single_file=None):
             head = [next(myfile) for x in range(0, N)]
 
         if not dataframe.empty:
+            import pdb
             pd.options.display.float_format = '{:.4f}'.format
             # ru_maxrss is in KB: http://man7.org/linux/man-pages/man2/getrusage.2.html. Converting to Mb
             dataframe["maxrss (Mb)"] = dataframe["ru_maxrss"] / 1e3
@@ -50,8 +51,7 @@ def parse_file(file, single_file=None):
                 .plot(x='T_experiment', secondary_y=["maxrss (Mb)"])
 
             plt.figtext(0.0, 1.0, ''.join(head), fontsize=8, horizontalalignment='left')
-            plt.figtext(0.65, 0.9, dataframe.mean().round(4), fontsize=8,
-                        horizontalalignment='left')
+            plt.figtext(0.65, 0.9, dataframe.dropna(axis=1).mean().round(4).to_string(), fontsize=8, horizontalalignment='left')
 
             if single_file is None:
                 plt.savefig(file + ".pdf",
